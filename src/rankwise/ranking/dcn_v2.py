@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 
 class CrossNetworkV2(nn.Module):
-    """
+    r"""
     Cross Network v2 layer:
         x_{l+1} = x_0 \odot (W_l x_l + b_l) + x_l
     where \odot is element-wise product.
