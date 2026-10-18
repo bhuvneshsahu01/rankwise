@@ -1,0 +1,53 @@
+{
+  "benchmark_metadata": {
+    "dataset": "KuaiRand-Pure",
+    "seed": 42,
+    "timestamp": "2026-10-18 17:42:41",
+    "hardware": "CPU (Intel64 Family 6 Model 140 Stepping 1, GenuineIntel)",
+    "python_version": "3.11.8",
+    "torch_version": "2.13.0+cpu"
+  },
+  "ranking_quality": {
+    "baseline_lightgbm_ndcg_at_10": 0.41,
+    "two_tower_dcn_v2_ndcg_at_10": 0.414,
+    "two_tower_dcn_v2_ndcg_at_10_ci95": [
+      0.394,
+      0.432
+    ],
+    "relative_ndcg_gain_pct": 0.98,
+    "evaluation_slice": "held-out unbiased random-exposure traffic (log_random_4_22_to_5_08_pure.csv)"
+  },
+  "counterfactual_evaluation": {
+    "snips_policy_value": 0.4402,
+    "unbiased_ground_truth_policy_value": 0.185,
+    "relative_estimation_error_pct": 137.98,
+    "snips_ci95": [
+      0.4335,
+      0.4468
+    ],
+    "ips_policy_value": 22.0079
+  },
+  "calibration": {
+    "uncalibrated_ece": 0.2745,
+    "calibrated_ece": 0.245,
+    "ece_reduction_pct": 10.73,
+    "calibration_method": "Isotonic Regression (10 bins)"
+  },
+  "serving_performance": {
+    "requests_benchmarked": 1000,
+    "p50_latency_ms": 9.56,
+    "p95_latency_ms": 12.23,
+    "p99_latency_ms": 28.18,
+    "throughput_rps": 97,
+    "hardware_spec": "CPU (Intel64 Family 6 Model 140 Stepping 1, GenuineIntel)"
+  },
+  "summary_metrics": {
+    "[A]": "0.410",
+    "[B]": "0.414",
+    "[E]%": "138.0%",
+    "[C]": "0.245",
+    "[D] ms": "28.2 ms",
+    "[Q] RPS": "97 RPS",
+    "[HARDWARE]": "CPU (Intel64 Family 6 Model 140 Stepping 1, GenuineIntel)"
+  }
+}
