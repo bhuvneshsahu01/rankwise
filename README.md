@@ -5,7 +5,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20%7C%203.11-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Rankwise** is a production-grade, two-stage recommendation and counterfactual evaluation framework trained on the [KuaiRand-Pure](https://zenodo.org/records/10439422) sequential interaction dataset. It couples a deep **Two-Tower** neural retriever with in-batch sampled softmax and $\log Q$ popularity debiasing, a multi-task **DCN-v2** (Deep & Cross Network v2) re-ranker, post-ranking probability calibration via isotonic regression, and counterfactual off-policy evaluation (**IPS / SNIPS**) rigorously validated against held-out unbiased random-exposure intervention traffic.
+**Rankwise** is a production-grade, two-stage recommendation and counterfactual evaluation framework trained on the [KuaiRand-Pure](https://zenodo.org/records/10439422) sequential interaction dataset. It couples a deep **Two-Tower** neural retriever with in-batch sampled softmax and $\log Q$ popularity debiasing, a multi-task **DCN-v2** (Deep & Cross Network v2) re-ranker, post-ranking probability calibration via isotonic regression, and counterfactual off-policy evaluation (**IPS / estimated-propensity SNIPS**) rigorously validated against held-out unbiased random-exposure intervention traffic.
 
 ---
 
@@ -41,8 +41,9 @@
                                           v
       +-----------------------------------------------------------------------+
       |  COUNTERFACTUAL OFF-POLICY EVALUATION                                 |
-      |  - Inverse Propensity Scoring (IPS) & Self-Normalized IPS (SNIPS)     |
-      |  - Evaluated against held-out unbiased random-exposure logs           |
+      |  - Inverse Propensity Scoring (IPS)                                   |
+      |  - Estimated-Propensity Self-Normalized IPS (estimated-propensity SNIPS)|
+      |  - Ground-truth validation vs. KuaiRand random-exposure logs           |
       +-----------------------------------------------------------------------+
 ```
 
@@ -66,14 +67,14 @@ Rankwise deploys a multi-task DCN-v2 architecture to model non-linear and high-o
 - **Multi-Objective Loss**: Blends click probability ($p_{\text{click}}$) and long-view completion probability ($p_{\text{long}}$):
   $$\mathcal{L}_{\text{rank}} = 0.7 \cdot \text{BCE}(p_{\text{click}}, y_{\text{click}}) + 0.3 \cdot \text{BCE}(p_{\text{long}}, y_{\text{long}})$$
 
-### 3. Statistically Honest Counterfactual Evaluation (SNIPS)
-Standard logged recommendation logs only reflect the logging policy $\pi_0$, rewarding models that merely parrot past exposures. Rankwise evaluates models on the held-out unbiased **KuaiRand random-exposure intervention slice** (`log_random_4_22_to_5_08_pure.csv`). 
+### 3. Statistically Honest Counterfactual Evaluation (Estimated-Propensity SNIPS)
+Standard logged recommendation datasets only reflect past exposures under the legacy logging policy $\pi_0$. Evaluating new models on observational logs introduces severe confounding and selection bias. Rankwise evaluates models on the held-out unbiased **KuaiRand random-exposure intervention slice** (`log_random_4_22_to_5_08_pure.csv`), where items were assigned uniformly at random.
 
-We estimate exposure propensities $\hat{e}(x, a)$ on standard traffic and compute the Self-Normalized Inverse Propensity Scoring (SNIPS) estimator:
+In production observational settings, ground-truth logging propensities are rarely recorded. We therefore evaluate **estimated-propensity SNIPS**: exposure propensities $\hat{e}(x, a)$ are estimated from observational logged traffic via an empirical exposure propensity model:
 
 $$\hat{V}_{\text{SNIPS}}(\pi) = \frac{\sum_{i=1}^N \min\left(\frac{\pi(a_i \mid x_i)}{\hat{e}(x_i, a_i)}, M\right) r_i}{\sum_{i=1}^N \min\left(\frac{\pi(a_i \mid x_i)}{\hat{e}(x_i, a_i)}, M\right)}$$
 
-The estimated off-policy value is benchmarked against the ground-truth empirical reward observed on the random traffic slice.
+**Empirical Finding on Estimator Bias:** When benchmarked against the ground-truth empirical value on the unbiased random slice ($V_{\text{true}} = 0.1850$), **estimated-propensity SNIPS yields $\hat{V}_{\text{SNIPS}} = 0.4402$—a 2.4x overstatement (138.0% relative estimation error)**. This demonstrates that using estimated exposure propensities $\hat{e}(x,a)$ instead of logged ground-truth intervention propensities leads to systematic over-estimation due to residual unobserved confounding and propensity model misspecification.
 
 ---
 
@@ -81,20 +82,22 @@ The estimated off-policy value is benchmarked against the ground-truth empirical
 
 All metrics below are generated directly from the reproducible benchmark script (`python benchmarks/run_rankwise_benchmarks.py`, seed=42) and stored in `benchmarks/results/rankwise_metrics.json`.
 
-| Evaluation Category | Metric / Specification | Measured Value | Baseline Comparison |
+| Evaluation Category | Metric / Specification | Measured Value | Baseline Comparison / Statistical Rigor |
 | :--- | :--- | :--- | :--- |
-| **Ranking Quality** | LightGBM LambdaMART NDCG@10 (Random Slice) | **0.410** | Baseline Reference |
-| **Ranking Quality** | Two-Tower + DCN-v2 NDCG@10 (Random Slice) | **0.414** | +0.98% relative gain |
-| **Ranking Quality** | 95% Bootstrap Confidence Interval | **[0.394, 0.432]** | 1,000 resamples |
-| **Counterfactual OPE** | SNIPS Policy Value $\hat{V}_{\text{SNIPS}}$ | **0.4402** | 95% CI: [0.4335, 0.4468] |
-| **Counterfactual OPE** | Ground Truth Value (Unbiased Random Slice) | **0.1850** | Empirical random exposure |
-| **Counterfactual OPE** | SNIPS Relative Estimation Error | **138.0%** | vs. Unbiased Ground Truth |
+| **Ranking Quality** | LightGBM LambdaMART NDCG@10 (Random Slice) | **0.410** | Baseline Reference (95% CI: [0.391, 0.431]) |
+| **Ranking Quality** | Two-Tower + DCN-v2 NDCG@10 (Random Slice) | **0.414** | +0.98% relative gain (95% CI: [0.394, 0.432]) |
+| **Ranking Rigor** | **Paired Diff (DCN-v2 minus LambdaMART)** | **+0.0034** | **Paired Bootstrap 95% CI: [-0.016, +0.022] (spans zero)** |
+| **Counterfactual OPE** | Estimated-Propensity SNIPS $\hat{V}_{\text{SNIPS}}$ | **0.4402** | 95% CI: [0.4335, 0.4468] |
+| **Counterfactual OPE** | Ground Truth Value (Unbiased Random Slice) | **0.1850** | Empirical random exposure intervention |
+| **Counterfactual OPE** | **Estimated-Propensity SNIPS Overstatement** | **2.38x (138.0% error)** | Explaining propensity misspecification vs ground truth |
 | **Probability Calibration**| Uncalibrated ECE (10 bins) | **0.2745** | Raw output probabilities |
 | **Probability Calibration**| Post-Calibration ECE (Isotonic Regression) | **0.2450** | **-10.73%** error reduction |
 | **Serving Latency** | p50 Latency (1,000 requests) | **9.56 ms** | ONNX + FAISS + DCN-v2 |
 | **Serving Latency** | p95 Latency (1,000 requests) | **12.23 ms** | Under load |
 | **Serving Latency** | **p99 Latency (1,000 requests)** | **28.18 ms** | End-to-end pipeline |
 | **Serving Throughput** | Sustained Query Throughput | **97 RPS** | CPU (Intel64 Family 6 Model 140 Stepping 1, GenuineIntel) |
+
+*Statistical Note on Ranking Comparison:* While DCN-v2 achieves a directional lift over LightGBM LambdaMART (+0.0034 NDCG@10), the **paired bootstrap 95% confidence interval on the difference `[-0.016, +0.022]` strictly spans zero**, demonstrating that offline ranking parity between the two strong baselines cannot be rejected at $\alpha = 0.05$.
 
 ---
 
@@ -147,7 +150,7 @@ rankwise/
 │   ├── data/                      # KuaiRand loader & temporal split
 │   ├── retrieval/                 # Two-Tower PyTorch, LogQ loss, FAISS HNSW
 │   ├── ranking/                   # DCN-v2 multi-task ranker, LambdaMART, Isotonic calibration
-│   ├── eval/                      # NDCG@K, ECE, IPS & SNIPS counterfactual OPE
+│   ├── eval/                      # NDCG@K, ECE, IPS & estimated-propensity SNIPS
 │   └── serving/                   # FastAPI app, feature store, ONNX runtime
 ├── tests/                         # 100% passing pytest suite
 ├── pyproject.toml
