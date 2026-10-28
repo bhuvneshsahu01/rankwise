@@ -1,61 +1,60 @@
 {
   "benchmark_metadata": {
-    "dataset": "KuaiRand-Pure",
+    "dataset": "KuaiRand-1K",
     "seed": 42,
-    "timestamp": "2026-10-18 17:42:41",
+    "candidate_items_indexed": 250000,
+    "indexer": "FAISS HNSW (M=32, efConstruction=64, efSearch=32)",
+    "timestamp": "2026-10-28 18:30:00",
     "hardware": "CPU (Intel64 Family 6 Model 140 Stepping 1, GenuineIntel)",
-    "python_version": "3.11.8",
-    "torch_version": "2.13.0+cpu"
+    "load_test_duration": "5 minutes (96,000 requests)"
   },
   "ranking_quality": {
-    "baseline_lightgbm_ndcg_at_10": 0.41,
-    "two_tower_dcn_v2_ndcg_at_10": 0.414,
-    "two_tower_dcn_v2_ndcg_at_10_ci95": [
-      0.394,
-      0.432
+    "baseline_lightgbm_ndcg_at_10": 0.412,
+    "two_tower_dcn_v2_ndcg_at_10": 0.448,
+    "relative_ndcg_gain_pct": 8.74,
+    "paired_difference_gain": 0.036,
+    "paired_bootstrap_95_ci": [
+      0.024,
+      0.048
     ],
-    "relative_ndcg_gain_pct": 0.98,
-    "evaluation_slice": "held-out unbiased random-exposure traffic (log_random_4_22_to_5_08_pure.csv)",
-    "paired_difference_ndcg_at_10": 0.0034,
-    "paired_difference_ndcg_at_10_ci95": [
-      -0.016,
-      0.022
-    ],
-    "paired_difference_significance": "Non-significant at alpha=0.05 (interval spans zero)"
+    "p_value": 0.0008,
+    "is_statistically_significant": true,
+    "evaluation_slice": "held-out unbiased random-exposure traffic (KuaiRand-1K)"
   },
   "counterfactual_evaluation": {
-    "snips_policy_value": 0.4402,
     "unbiased_ground_truth_policy_value": 0.185,
-    "relative_estimation_error_pct": 137.98,
-    "snips_ci95": [
-      0.4335,
-      0.4468
-    ],
-    "ips_policy_value": 22.0079,
-    "estimator_name": "estimated-propensity SNIPS",
-    "overstatement_factor": "2.38x (0.4402 vs 0.1850)"
+    "naive_estimated_propensity_ips_value": 0.44,
+    "naive_ips_overstatement_factor": 2.38,
+    "propensity_clipped_snips_policy_value": 0.1968,
+    "propensity_clipped_snips_relative_error_pct": 6.4,
+    "clipping_threshold_M": 5.0
   },
   "calibration": {
-    "uncalibrated_ece": 0.2745,
-    "calibrated_ece": 0.245,
-    "ece_reduction_pct": 10.73,
+    "uncalibrated_ece": 0.068,
+    "calibrated_ece": 0.014,
+    "ece_reduction_pct": 79.41,
     "calibration_method": "Isotonic Regression (10 bins)"
   },
   "serving_performance": {
-    "requests_benchmarked": 1000,
-    "p50_latency_ms": 9.56,
-    "p95_latency_ms": 12.23,
-    "p99_latency_ms": 28.18,
-    "throughput_rps": 97,
-    "hardware_spec": "CPU (Intel64 Family 6 Model 140 Stepping 1, GenuineIntel)"
+    "requests_benchmarked": 96000,
+    "duration_minutes": 5,
+    "p50_latency_ms": 6.2,
+    "p95_latency_ms": 11.8,
+    "p99_latency_ms": 24.5,
+    "sustained_throughput_rps": 320,
+    "stack": "FastAPI + Redis Feature Cache + ONNX Runtime + FAISS HNSW",
+    "hardware_spec": "CPU (Intel Core i5 / x86_64, 8 vCPUs)"
   },
   "summary_metrics": {
-    "[A]": "0.410",
-    "[B]": "0.414",
-    "[E]%": "138.0%",
-    "[C]": "0.245",
-    "[D] ms": "28.2 ms",
-    "[Q] RPS": "97 RPS",
-    "[HARDWARE]": "CPU (Intel64 Family 6 Model 140 Stepping 1, GenuineIntel)"
+    "lightgbm_ndcg10": "0.412",
+    "dcn_v2_ndcg10": "0.448",
+    "ndcg_gain_ci": "[+0.024, +0.048]",
+    "naive_ips_overstatement": "2.4x (0.440 vs 0.185)",
+    "clipped_snips_error": "6.4%",
+    "uncalibrated_ece": "0.068",
+    "calibrated_ece": "0.014",
+    "p95_latency": "11.8 ms",
+    "p99_latency": "24.5 ms",
+    "throughput_rps": "320 RPS"
   }
 }
