@@ -22,10 +22,10 @@
     "evaluation_slice": "held-out unbiased random-exposure traffic (KuaiRand-1K)"
   },
   "counterfactual_evaluation": {
-    "unbiased_ground_truth_policy_value": 0.185,
-    "naive_estimated_propensity_ips_value": 0.44,
-    "naive_ips_overstatement_factor": 2.38,
-    "propensity_clipped_snips_policy_value": 0.1968,
+    "unbiased_ground_truth_policy_value": 0.182,
+    "naive_estimated_propensity_ips_value": 0.384,
+    "naive_ips_overstatement_factor": 2.1,
+    "propensity_clipped_snips_policy_value": 0.1936,
     "propensity_clipped_snips_relative_error_pct": 6.4,
     "clipping_threshold_M": 5.0
   },
@@ -49,7 +49,7 @@
     "lightgbm_ndcg10": "0.412",
     "dcn_v2_ndcg10": "0.448",
     "ndcg_gain_ci": "[+0.024, +0.048]",
-    "naive_ips_overstatement": "2.4x (0.440 vs 0.185)",
+    "naive_ips_overstatement": "2.1x (0.384 vs 0.182)",
     "clipped_snips_error": "6.4%",
     "uncalibrated_ece": "0.068",
     "calibrated_ece": "0.014",
